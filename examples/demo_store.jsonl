@@ -1,0 +1,8 @@
+{"id": "circuit_breaker", "text": "A circuit breaker trips open after repeated failures and recovers on a timeout, protecting a downstream service from being hammered while it is unhealthy."}
+{"id": "write_ahead_log", "text": "A write-ahead log records every mutation to durable storage before applying it, so a crash can be recovered by replaying the log."}
+{"id": "gossip_protocol", "text": "A gossip protocol spreads membership and state updates across distributed nodes by having each node periodically exchange information with a few random peers."}
+{"id": "token_bucket", "text": "A token-bucket rate limiter refills tokens at a fixed rate; a request is allowed only if a token is available, smoothing bursts to an average rate."}
+{"id": "lru_cache", "text": "An LRU cache evicts the least-recently-used entry when full, keeping hot keys resident; add a TTL to also expire stale entries by time."}
+{"id": "consistent_hashing", "text": "Consistent hashing maps keys and nodes onto a ring so that adding or removing a node only remaps a small fraction of keys, with virtual nodes for balance."}
+{"id": "two_phase_commit", "text": "Two-phase commit coordinates an atomic transaction across participants: a prepare phase where everyone votes, then a commit or abort phase driven by the coordinator."}
+{"id": "bloom_filter", "text": "A Bloom filter is a probabilistic set that answers membership with no false negatives and tunable false positives, using several hash functions over a bit array."}
