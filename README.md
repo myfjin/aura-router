@@ -62,9 +62,26 @@ AURA_ROUTER_STORE=your_record.jsonl python server/aura_router_mcp.py   # stdio M
 Tools exposed: `route(query, budget_chars, min_score)`, `add_item(id, text)`, `store_info()`.
 Runs out of the box against a bundled demo store if `AURA_ROUTER_STORE` is unset.
 
+## v1.2 — auto-recall at wake, and the experiment behind it
+
+We tested the honest question — *drop a fresh instance cold with only its substrate:
+does it know what it was mid-doing?* — on our own setup. Finding: identity
+reconstitutes for free, but the **work-thread doesn't reach the record on abstract
+prompts** — the cold instance confabulates, confidently. The recall trigger is
+conditional on prompt concreteness; the fix is to fire recall *before the first word*.
+
+- **[`experiment/COLD-PROBE.md`](experiment/COLD-PROBE.md)** — the cold-probe
+  protocol: four probe types, a three-outcome rubric, our findings, and how to run
+  it on your own agent (a synthetic demo corpus is bundled). Reproducible; currently
+  n=2 on one setup — the protocol exists so others can add to n.
+- **[`wake/`](wake/README.md)** — the wake-recall pattern: session-start hook +
+  active-thread pointer + budget-bounded slice. What crosses the boundary is the
+  pointer and the recall ability, not the history.
+
 ## Run the tests
 ```bash
-python engine/router.py     # engine self-test
+python engine/router.py            # engine self-test
+python3 wake/wake_recall.py        # the v1.2 wake block, from the demo corpus
 ```
 
 ## The honest boundary
