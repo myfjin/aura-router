@@ -50,6 +50,9 @@ POINTER_PATH = Path(os.environ.get("AURA_WAKE_POINTER",
                                    REPO / "examples/ACTIVE_THREAD.json"))
 
 RECALL_BUDGET = 2400   # chars of relevance-routed slice
+RECALL_MIN_SCORE = 0.05  # score floor: when nothing truly matches, inject nothing —
+                         # a tail-only wake beats a confident wrong-thread slice
+SLICE_TRUNC = 500      # per slice entry: one long record entry must not eat the window
 TAIL_N = 3             # always show the record tail (most recent context)
 TAIL_TRUNC = 600       # per tail entry
 HARD_CAP = 7000        # absolute ceiling on injected chars
@@ -77,11 +80,13 @@ def main():
         if stride:
             out.append(f"ACTIVE THREAD (updated {pointer.get('updated', '?')} by "
                        f"{pointer.get('by', '?')}): {stride}")
-            s = Router(store).route(stride, budget_chars=RECALL_BUDGET)
+            s = Router(store).route(stride, budget_chars=RECALL_BUDGET,
+                                    min_score=RECALL_MIN_SCORE)
             if s.items:
                 out.append("-- relevant slice (routed on the active thread) --")
                 for it in s.items:
-                    out.append(f"[{it.meta.get('timestamp')}] {it.meta.get('speaker')}: {it.text}")
+                    t = it.text if len(it.text) <= SLICE_TRUNC else it.text[:SLICE_TRUNC] + " …[truncated]"
+                    out.append(f"[{it.meta.get('timestamp')}] {it.meta.get('speaker')}: {t}")
         else:
             out.append("ACTIVE THREAD: no pointer yet — tail only.")
         tail = store.items[-TAIL_N:]

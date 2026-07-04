@@ -53,3 +53,13 @@ Unset, it runs against the bundled demo corpus — try it dry before wiring anyt
   window space. The budget is the feature, not a limitation.
 - **The pointer is written by the work, not about it.** Auto-updated from the turn
   that just happened; manual curation reintroduces the failure mode this replaces.
+- **The pointer must describe the work, not quote the last message.** We learned
+  this on our own deployment: a stride copied verbatim from a conversational
+  opener ("im back again!") routes on greeting-noise and pulls a confidently
+  wrong slice. Write the pointer from the *substance* of the turn — e.g. the
+  opening line plus the start of the reply, where the work vocabulary lives.
+- **Floor and cap the slice.** `RECALL_MIN_SCORE` keeps a weak match from
+  injecting anything (a tail-only wake beats a wrong-thread slice), and
+  `SLICE_TRUNC` keeps one long record entry from eating the whole window. Both
+  guards exist because we watched both failures happen, same day, on our own
+  record.
