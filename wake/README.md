@@ -122,3 +122,47 @@ that is the only thing that proves it *fires*.
   `SLICE_TRUNC` keeps one long record entry from eating the whole window. Both
   guards exist because we watched both failures happen, same day, on our own
   record.
+- **Not every turn that looks like the user is the user.** See below — this one
+  cost us six forged entries and a self-poisoning pointer.
+
+## Field note: the harness writes turns that wear the user's name
+
+*Found on our own deployment, 2026-07-26.*
+
+Context compaction is a **second wake** — the session-start hook fires again when the
+window is squashed, which is right: compaction is exactly when the thread needs
+re-lighting. But compaction also writes into the transcript, and what it writes can
+look like a human turn.
+
+In our harness the compaction summary arrives as a row typed `user`, flagged
+`isCompactSummary`, carrying plain string content. Our pointer-writer's test for "is
+this the human's turn?" was *does this row have text* — so it took the summary as the
+user's words. Two consequences, and the second is the dangerous one:
+
+1. the summary was appended to the record **under the human's name** — forged
+   provenance, in the one file that is supposed to be the honest record;
+2. the summary became the **stride**, so the next wake routed on
+   *"This session is being continued from a previous conversation…"* — boilerplate
+   that appears in **every** compaction. The router faithfully retrieved other
+   compaction summaries. The pointer had been pointed at its own noise.
+
+The fix is one guard, and its shape matters: treat such a row as a **boundary** —
+stop the backward walk there and record no user text — rather than skipping past it
+in search of a "real" turn. We tried walking past. It crosses turn boundaries and
+re-collects prior turns; one transcript's captured turn went from 964 to 59,257
+characters. The synthetic rows are load-bearing precisely *because* they mark where
+a turn begins.
+
+Two things generalize past our harness:
+
+- **Ask of your pointer-writer: could the harness itself have produced this text?**
+  Compaction summaries, command wrappers, tool preambles, resumption banners — any
+  of them can be typed as the user in a transcript format.
+- **A stride made of harness boilerplate is worse than no stride**, because it is the
+  string most likely to match other boilerplate. A poisoned pointer doesn't fail
+  loudly; it retrieves confidently, and every wake after it inherits the mistake.
+
+We dated the damage before fixing it — the bad entries stopped on a day the record was
+rebuilt, which made this look like an artifact of the rebuild rather than a live bug.
+It wasn't: a fixture reproduced it against current code. **A static artifact records
+the whole past, not the present.** Test the producer, not the output.
