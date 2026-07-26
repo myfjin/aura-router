@@ -78,10 +78,25 @@ conditional on prompt concreteness; the fix is to fire recall *before the first 
   active-thread pointer + budget-bounded slice. What crosses the boundary is the
   pointer and the recall ability, not the history.
 
+### v1.2.2 — where the hook lives is part of the mechanism
+
+Found on our own deployment: the hook that *writes* the pointer was installed for
+every session, while the hook that *reads* it at wake lived in a single project's
+settings. Three of four project histories were waking cold, silently — the pattern
+was correct and its deployment was not. Fixing that exposes the second half: one
+pointer per machine, many projects per machine. So the pointer now records where it
+was written, and on a mismatch the wake **suppresses the routed slice and keeps the
+record tail**. Details, the full guard table, and a runnable demo of both paths:
+[`wake/README.md`](wake/README.md#deployment-is-part-of-the-mechanism-v122).
+
 ## Run the tests
 ```bash
 python engine/router.py            # engine self-test
-python3 wake/wake_recall.py        # the v1.2 wake block, from the demo corpus
+python3 wake/wake_recall.py        # the wake block, from the demo corpus
+
+# the v1.2.2 scope guard, both paths
+AURA_WAKE_POINTER=examples/ACTIVE_THREAD.scoped.json AURA_WAKE_PROJECT=marlin python3 wake/wake_recall.py </dev/null
+AURA_WAKE_POINTER=examples/ACTIVE_THREAD.scoped.json AURA_WAKE_PROJECT=ledger python3 wake/wake_recall.py </dev/null
 ```
 
 ## The honest boundary
